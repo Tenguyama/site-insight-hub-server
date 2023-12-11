@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./:/var/www
+            - ./_docker/nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - "8080:80"
+        depends_on:
+            - app
+        container_name: app_nginx
+
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - db
+        container_name: app
+
+    db:
+        image: postgres:14.8
+        restart: always
+        volumes:
+            - ./tmp/db1:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: site-insight-hub
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: root
+        ports:
+            - "8101:5432"
+        container_name: app_db
+
+    frontend:
+        image: node:14
+        volumes:
+            - ./:/var/www
+        working_dir: /var/www
+        command: "npm run dev"
